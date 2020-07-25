@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:with="title='分类管理',active='category'">
+<header th:replace="back/header::headerFragment(${title},${active})"></header>
+<head>
+    <meta th:name="_csrf" th:content="${_csrf.token}"/>
+    <!-- 默认的header name是X-CSRF-TOKEN -->
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+</head>
+<body class="fixed-left">
+<div id="wrapper">
+    <div th:replace="back/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">分类管理</h4>
+                        <a th:href="@{'/admin/category/toEditPage'}"
+                           class="btn btn-primary btn-sm waves-effect waves-light m-b-5">
+                            <span>新增分类</span></a>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="freezedivTable" class="table table-striped table-bordered">
+                            <thead>
+                            <tr>
+                                <th width="15%">一级分类</th>
+                                <th width="15%">二级分类</th>
+                                <th>创建时间</th>
+                                <th>使用次数</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <th:block th:each="category : ${categorys.list}">
+                                <tr th:id="${category.id}">
+                                    <td>
+                                        <th:block th:text="${category.parentName}"/>
+                                    </td>
+                                    <td><th:block th:text="${category.categoryName}"/></td>
+                                    <td><th:block th:text="${commons.dateFormat(category.creationTime)}"/></td>
+                                    <td><th:block th:text="${category.useNum}"/></td>
+                                    <td id="wrap">
+
+                                        <a href="javascript:void(0)" th:onclick="'delcategory('+${category.id}+');'"
+                                           class="btn btn-danger btn-sm waves-effect waves-light m-b-5">
+                                             <span>删除</span></a>
+                                    </td>
+                                </tr>
+                            </th:block>
+
+                            </tbody>
+                        </table>
+                        <div th:replace="comm/paging :: pageAdminNav(${categorys})"></div>
+                    </div>
+                </div>
+                <div th:replace="back/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="back/footer :: footer"></div>
+<script type="text/javascript">
+
+    function updatecategory(id,status) {
+        console.log("111")
+        // 获取<meta>标签中封装的_csrf信息
+        $("#articleForm #status").val(status);
+        $("#articleForm #categories").val($('#multiple-sel').val());
+            if(status==0){
+                status="disapproved"
+            }else
+                status="approved"
+            $.ajax({
+                type:'post',
+                url : '/admin/category/update',
+                data: {id:id,status:status},
+                dataType: 'json',
+                beforeSend : function(xhr) {
+                    xhr.setRequestHeader(header, token);
+                },
+                success: function (result) {
+                    if (result && result.success) {
+                        window.location.reload();
+                    } else {
+                        window.alert(result.msg || '修改失败')
+                    }
+                }
+            });
+    }
+    function delcategory(id) {
+        console.log("111")
+        // 获取<meta>标签中封装的_csrf信息
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        if(confirm('确定删除该分类吗?')){
+            $.ajax({
+                type:'post',
+                url : '/admin/category/delete',
+                data: {id:id},
+                dataType: 'json',
+                beforeSend : function(xhr) {
+                    xhr.setRequestHeader(header, token);
+                },
+                success: function (result) {
+                    if (result && result.success) {
+                        window.alert("分类删除成功");
+                        window.location.reload();
+                    } else {
+                        window.alert(result.msg || '分类删除失败')
+                    }
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>

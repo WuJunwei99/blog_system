@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:with="title='创建分类',active='category'">
+<header th:replace="back/header::headerFragment(${title},${active})">
+</header>
+<link th:href="@{/back/plugins/tagsinput/jquery.tagsinput.css}" rel="stylesheet"/>
+<link th:href="@{/back/plugins/select2.dist.css/select2-bootstrap.css}" rel="stylesheet"/>
+<link th:href="@{/back/plugins/toggles/toggles.css}" rel="stylesheet"/>
+
+<link th:href="@{/back/plugins/mditor/css/mditor.min.css}" rel="stylesheet"/>
+<link th:href="@{/back/plugins/dropzone/4.3.0/min/dropzone.min.css}" rel="stylesheet">
+<style>
+    #tags_tagsinput {
+        background-color: #fafafa;
+        border: 1px solid #eeeeee;
+    }
+
+    #tags_addTag input {
+        width: 100%;
+    }
+
+    #tags_addTag {
+        margin-top: -5px;
+    }
+
+    .mditor .editor{
+        font-size: 14px;
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .mditor .backdrop, .mditor .textarea, .mditor .viewer{
+        font-size: 14px;
+    }
+    .markdown-body{
+        font-size: 14px;
+    }
+    .note-toolbar {
+        text-align: center;
+    }
+
+    .note-editor.note-frame {
+        border: none;
+    }
+
+    .note-editor .note-toolbar {
+        background-color: #f5f5f5;
+        padding-bottom: 10px;
+    }
+
+    .note-toolbar .note-btn-group {
+        margin: 0;
+    }
+
+    .note-toolbar .note-btn {
+        border: none;
+    }
+
+    #articleForm #dropzone {
+        min-height: 200px;
+        background-color: #dbdde0;
+        line-height:200px;
+        margin-bottom: 10px;
+    }
+    #articleForm .dropzone {
+        border: 1px dashed #8662c6;
+        border-radius: 5px;
+        background: white;
+    }
+    #articleForm .dropzone .dz-message {
+        font-weight: 400;
+    }
+    #articleForm .dropzone .dz-message .note {
+        font-size: 0.8em;
+        font-weight: 200;
+        display: block;
+        margin-top: 1.4rem;
+    }
+</style>
+<body class="fixed-left">
+<div id="wrapper">
+    <div th:replace="back/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">
+                            <th:block th:if="${null != contents}">
+                                编辑文章
+                            </th:block>
+                            <th:block th:unless="${null != contents}">
+                                新建分类
+                            </th:block>
+                        </h4>
+                    </div>
+                    <div class="col-md-12">
+                        <form id="articleForm">
+                            <div class="form-group col-md-6" style="padding: 0 10px 0 0;">
+                                <tr>
+                                    <td>一级分类:</td>
+                                    <td>
+                                        <select id="categorical1" name="id"  class="form-control"  required="required">
+                                            <option value="">--请选择--</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </div>
+                            <div class="form-group col-md-6" style="padding: 0 10px 0 0;">
+                                <tr>
+                                    <td>请输入二级分类名:</td>
+                                    <td><input  name="categoryName" type="text" class="form-control" ></input></td>
+                                </tr>
+                            </div>
+                        </form>
+                            <div class="text-right">
+                                <a class="btn btn-default waves-effect waves-light" th:href="@{/admin/categorys}">返回列表</a>
+                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="subCategory()">
+                                    保存分类
+                                </button>
+                            </div>
+
+                    </div>
+                </div>
+                <div th:replace="back/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="back/footer :: footer"></div>
+<div th:replace="back/footer :: footer"></div>
+<script type="text/javascript">
+
+
+    /**
+     * 保存分类
+     * @param status
+     */
+    function subCategory() {
+        console.log($("#articleForm").serialize());
+        $.ajax({
+            type: "GET",
+            url:"/admin/category/publish",
+            data:$("#articleForm").serialize(),
+            success: function (result) {
+                if (result && result.success) {
+                    tale.alertOk({
+                        text:'分类创建成功',
+                        then: function () {
+                            setTimeout(function () {
+                                window.location.href = '/admin/categorys';
+                            }, 500);
+                        }
+                    });
+                } else {
+                    tale.alertError(result.msg || '分类创建失败！');
+                }
+            }
+        });
+    }
+
+
+    var App = function () {
+        var handlerGetCategory = function (level,parent) {
+            var url = "/admin/category?level="+level;
+            if (parent !== ''){
+                url += ("&parent="+parent);
+            }
+            var categoryList;
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: 'json',
+                async: false,
+                success: function(msg){
+                    categoryList = JSON.stringify(msg);
+                    //alert(JSON.stringify(msg));
+                }
+            });
+            return categoryList;
+
+        }
+        return{
+            //获取分类列表
+            getCategory: function (level,parent) {
+                return handlerGetCategory(level,parent);
+            }
+        }
+    }();
+
+
+    //获取分类列表
+    var category = JSON.parse(App.getCategory("level1",""));
+
+    //遍历分类列表，加入到下拉框中
+    $.each(category, function (index, data) {
+        console.log(data.id);
+        $("#categorical1").append('<option value="'+data.id+'">'+ data.categoryName +'</option>')
+    });
+    console.log(document.getElementById("categorical1"))
+    $("#categorical1 option:nth-child(1)").prop("selected", 'selected')
+
+
+
+</script>
+<script th:src="@{/back/plugins/tagsinput/jquery.tagsinput.min.js}"></script>
+<script th:src="@{/back/plugins/jquery-multi-select/jquery.quicksearch.js}"></script>
+
+<script th:src="@{/back/plugins/mditor/js/mditor.min.js}"></script>
+<script th:src="@{/back/plugins/multi-select/0.9.12/js/jquery.multi-select.min.js}"></script>
+<script th:src="@{/back/plugins/select2/3.4.8/select2.min.js}"></script>
+<script th:src="@{//cdn.bootcss.com/jquery-toggles/2.0.4/toggles.min.js}"></script>
+<script th:src="@{/back/plugins/dropzone/4.3.0/min/dropzone.min.js}"></script>
+<script th:src="@{/back/plugins/to-markdown/3.1.0/to-markdown.min.js}"></script>
+
+<script th:src="@{/back/js/article.js}"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.dao.ArticleMapper">
+    <sql id="articleInfoColumns">
+        a.id,
+        a.title,
+        a.created,
+        a.tags,
+        a.categories,
+        a.allow_comment,
+        a.thumbnail,
+        a.content,
+        a.category_level1,
+        a.category_level2,
+        c1.`categoryName` AS cat1,
+        c1.`parentId` AS parent1,
+        c2.`categoryName` cat2,
+        c2.`parentId` AS parent2
+    </sql>
+    <resultMap type="Article" id="queryArticle_resultMap">
+        <id column="id" property="id"/>
+        <result column="title" property="title"></result>
+        <result column="created" property="created"></result>
+        <result column="modified" property="modified"></result>
+        <result column="tags" property="tags"></result>
+        <result column="categories" property="categories"></result>
+        <result column="allow_comment" property="allowComment"></result>
+        <result column="thumbnail" property="thumbnail"></result>
+        <result column="content" property="content"></result>
+        <association property="categorical1" javaType="Category">
+            <id column="category_level1" property="id"/>
+            <result column="cat1" property="categoryName"/>
+            <result column="parent1" property="parentId"/>
+        </association>
+        <association property="categorical2" javaType="Category">
+            <id column="category_level2"  property="id"/>
+            <result column="cat2" property="categoryName"/>
+            <result column="parent2" property="parentId"/>
+        </association>
+    </resultMap>
+
+    <update id="updateArticleWithId" parameterType="Article">
+        update t_article
+        <set>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="created != null">
+                created = #{created},
+            </if>
+            <if test="modified != null">
+                modified = #{modified},
+            </if>
+            <if test="tags != null">
+                tags = #{tags},
+            </if>
+            <if test="categories != null">
+                categories = #{categories},
+            </if>
+            <if test="hits != null">
+                hits = #{hits},
+            </if>
+            <if test="commentsNum != null">
+                comments_num = #{commentsNum},
+            </if>
+            <if test="allowComment != null">
+                allow_comment = #{allowComment},
+            </if>
+            <if test="thumbnail != null">
+                thumbnail = #{thumbnail},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="selectArticleWithPage" resultMap="queryArticle_resultMap">
+        select <include refid="articleInfoColumns"/>
+        from t_article a
+        LEFT JOIN t_category AS c1 ON a.`category_level1` = c1.`id`
+        LEFT JOIN t_category AS c2 ON a.`category_level2` = c2.`id`
+        ORDER BY id DESC
+    </select>
+
+
+</mapper>
